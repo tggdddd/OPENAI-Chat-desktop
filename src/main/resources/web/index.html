@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Left Title List and Right Container with Message Records and Input Box</title>
+        <meta charset="utf-8">
+        <style>
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            #body {
+                height: 100vh;
+                width: 100%;
+                display: flex;
+                position: revert;
+                flex-grow: 1;
+            }
+
+            #history {
+                height: 100%;
+                flex-grow: 1;
+                display: flex;
+            }
+
+            /* 左侧标题列表样式 */
+            #history ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                min-width: 120px;
+                height: 100%;
+                float: left;
+                background-color: #ccc;
+                position: relative;
+                overflow: scroll;
+            }
+
+            #history li {
+                padding: 10px;
+                cursor: pointer;
+                background-color: #ddd;
+            }
+
+            #history li:hover {
+                background-color: #bbb;
+            }
+
+            /* 右侧容器样式 */
+            #container {
+                width: 100%;
+                height: 100%;
+                /*padding: 10px;*/
+                flex-grow: 3;
+                display: flex;
+                box-sizing: border-box;
+                overflow: hidden;
+                position: relative;
+            }
+
+            #messageBox {
+                height: calc(100% - 50px);
+                overflow-y: scroll;
+                width: 100%;
+                flex-grow: 1;
+                margin: 0 0 10px;
+                padding: 0;
+                border: 0;
+                background: #efffea;
+            }
+
+            #input-container {
+                display: flex;
+            }
+
+            .message {
+                display: flex;
+                margin: 10px;
+            }
+
+            .reverse {
+                flex-direction: row-reverse;
+            }
+
+            .message-avatar {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background-color: #ccc;
+                margin-right: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                color: #fff;
+            }
+
+            .message-content {
+                background-color: #e1ffc7;
+                padding: 10px;
+                border-radius: 10px;
+                flex: 1;
+                font-size: 16px;
+                line-height: 1.5;
+            }
+
+            #input {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 40px;
+                height: auto;
+                min-height: 50px;
+                resize: none;
+                padding: 10px;
+                box-sizing: border-box;
+                border: 1px solid #ccc;
+                background-color: #fff;
+            }
+
+            #send {
+                position: absolute;
+                bottom: 10px;
+                width: 40px;
+                height: 40px;
+                right: 0px;
+            }
+
+            .shake-animation {
+                animation: shake 0.1s;
+            }
+
+            @keyframes shake {
+                0% {
+                    transform: translateX(0);
+                }
+                20% {
+                    transform: translateX(-10px);
+                }
+                40% {
+                    transform: translateX(10px);
+                }
+                60% {
+                    transform: translateX(-10px);
+                }
+                80% {
+                    transform: translateX(10px);
+                }
+                100% {
+                    transform: translateX(0);
+                }
+            }
+
+            button {
+                background-color: #4CAF50;
+                color: white;
+                padding: 2px 4px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+
+            button:hover {
+                background-color: #3e8e41;
+            }
+
+            #modal {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                z-index: 9;
+                transform: translate(-50%, -50%);
+            }
+        </style>
+    </head>
+    <body>
+        <div id="body">
+            <!--            设置弹窗-->
+            <div id="modal" class="modal" style="display: none;background: white;padding: 20px;border: 1px solid yellowgreen">
+                <div class="modal-content">
+<!--                    <span class="close">&times;</span>-->
+                    <h2>设置</h2>
+                    <form id="form">
+                        <label for="model">模型：</label><input type="text" id="model" name="model" required><br/>
+                        <label for="max_tokens">最大文本：</label><input type="text" id="max_tokens" name="max_tokens" required><br/>
+                        <label for="temperature">随机性(0,2)：</label><input type="text" id="temperature" name="temperature" required><br/>
+                        <label for="n">生成数：</label><input type="text" id="n" name="n" required><br/>
+                        <label for="presence_penalty">创造性(-2,2)：</label><input type="text" id="presence_penalty" name="presence_penalty" required><br/>
+                        <label for="frequency_penalty">重复性(-2,2)：</label><input type="text" id="frequency_penalty" name="frequency_penalty" required><br/>
+                        <label for="user">用户标识：</label><input type="text" id="user" name="user" required><br/>
+                        <label for="token">密钥：</label><input type="text" id="token" name="token" required><br/>
+                        <label for="guide">指令：</label><input type="text" id="guide" name="guide" required><br/>
+                        <button id="save" type="submit">提交</button>
+                        <button id="cancel" type="reset">取消</button>
+                    </form>
+                </div>
+            </div>
+            <!-- 左侧标题列表 -->
+
+            <div id="history" style="position:relative;height: 100%">
+                <ul id="fileList">
+                    <li>aaa</li>
+                </ul>
+
+                <div style="flex-grow: 0;position:absolute;bottom: 2px;left: 0;right: 5px;display: flex">
+                    <button id="setting" style="flex-grow: 1;flex-shrink:1;margin: 2px;height: 40px">设置</button>
+                    <button id="newChat" style="flex-grow: 1;flex-shrink:1;margin: 2px">新会话</button>
+                </div>
+            </div>
+            <!-- 右侧容器 -->
+            <div id="container">
+                <div id="messageBox">
+
+                </div>
+
+                <!-- 输入框 -->
+                <div id="input-container">
+                    <label for="input"></label><textarea id="input" placeholder="Type your message here..."></textarea>
+                    <button id="send">发送</button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            let isRun = false;
+            const STOP_FLAG = "#￥#@！！#￥";
+            const ERROR_FLAG = "#￥#@%！#￥";
+            const LENGTH_STOP_FLAG = "#￥@@%！#￥";
+            const messageBox = document.getElementById("messageBox");
+            const modal = document.getElementById("modal");
+            const setting = document.getElementById("setting");
+            const fileList = document.getElementById("fileList");
+            const save = document.getElementById("save");
+            const send = document.getElementById("send");
+            const cancel = document.getElementById("cancel");
+            const textarea = document.getElementById("input");
+            const clear = document.getElementById("newChat");
+            // 加载消息记录
+            //todo 未知bug 可能线程冲突
+            // function history(){
+            //     let data = JSON.parse(app.listSession())
+            //     fileList.innerHTML = ""
+            //     for (const datum of data) {
+            //         fileList.innerHTML = fileList.innerHTML + `
+            //         <li>${datum}</li>
+            //         `
+            //     }
+            // }
+            // history()
+            clear.addEventListener("click",()=>{
+                messageBox.innerHTML = ""
+                app.newSession()
+            })
+
+            // 自动调整输入框高度
+            textarea.addEventListener("input", () => {
+                textarea.style.height = "auto";
+                textarea.style.height = textarea.scrollHeight + "px";
+            });
+
+            // 设置
+            setting.addEventListener("click", () => {
+                //     加载数据
+                let data = JSON.parse(app.loadSetting())
+                document.getElementById("model").value = data.model;
+                document.getElementById("max_tokens").value = data.max_tokens;
+                document.getElementById("temperature").value = data.temperature;
+                document.getElementById("n").value = data.n;
+                document.getElementById("presence_penalty").value = data.presence_penalty;
+                document.getElementById("frequency_penalty").value = data.frequency_penalty;
+                document.getElementById("user").value = data.user;
+                document.getElementById("token").value = data.token;
+                document.getElementById("guide").value = data.guide;
+                modal.style.display = "block"
+            })
+            // 保存设置
+            save.addEventListener("click", () => {
+                let data = {}
+                data.model = document.getElementById("model").value;
+                data.max_tokens = document.getElementById("max_tokens").value;
+                data.temperature = document.getElementById("temperature").value;
+                data.n = document.getElementById("n").value;
+                data.presence_penalty = document.getElementById("presence_penalty").value;
+                data.frequency_penalty = document.getElementById("frequency_penalty").value;
+                data.user = document.getElementById("user").value;
+                data.token = document.getElementById("token").value;
+                data.guide = document.getElementById("guide").value;
+                app.saveSetting(JSON.stringify(data))
+                modal.style.display = "none"
+            })
+            // 关闭设置
+            cancel.addEventListener("click", () => {
+                modal.style.display = "none"
+            })
+            // 发送消息
+            send.addEventListener("click", () => {
+                if (isRun) {
+                    send.classList.add('shake-animation');
+                    setTimeout(function () {
+                        send.classList.remove('shake-animation');
+                    }, 500);
+                }
+                let message = textarea.value
+                textarea.value = ""
+                const result = app.send(message)
+                if ("stop" === result) {
+                    send.classList.add('shake-animation');
+                    setTimeout(function () {
+                        send.classList.remove('shake-animation');
+                    }, 500);
+                } else {
+                    isRun = true;
+                    let mes = document.createElement("div")
+                    mes.classList.add("message", "reverse")
+                    mes.innerHTML = ` <div class="message-avatar">头像</div>
+                    <div class="message-content">
+                        ${message}
+                    </div>`
+                    messageBox.appendChild(mes)
+                    mes = document.createElement("div")
+                    mes.classList.add("message")
+                    mes.innerHTML = ` <div class="message-avatar">头像</div>
+                    <div class="message-content ai">
+
+                    </div>`
+                    messageBox.appendChild(mes)
+                    message.scrollTop = message.scrollHeight - message.clientHeight;
+                }
+            });
+            // 监听键盘按下事件
+            textarea.addEventListener("keydown", function(event) {
+                // 判断是否按下了Enter键并且同时按下了Shift键
+                if (event.keyCode === 13 && event.shiftKey) {
+                    // 执行Shift + Enter键的逻辑
+                    send.click()
+                }
+            })
+            //     定时获取消息
+            setInterval(() => {
+                if (isRun) {
+                    let message = app.getMessage()
+                    let dd = document.querySelectorAll(".ai")
+                    let t = dd[dd.length - 1]
+                    if (message === STOP_FLAG) {
+                        isRun = false;
+                    } else if (message === LENGTH_STOP_FLAG) {
+                        isRun = false;
+                    } else if (message === ERROR_FLAG) {
+                        isRun = false;
+                    } else if (message !== "") {
+                        t.innerHTML = t.innerHTML + message
+                    }
+                }
+            }, 10)
+        </script>
+    </body>
+</html>
